@@ -1,2 +1,7 @@
+0.02
+    (cmb) Fix the formatting for POD
+          Add two new functions: fetch_tags(), reorder_tags()
+          Add the tests for the new functions
+          Cleanup 10write.t
 0.01
     (cmb) Initial release.

@@ -19,7 +19,7 @@ require 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use IO::File;
 use File::Spec;
@@ -203,6 +203,37 @@ sub fetch {
     return $self->{_mosaics}->{$tag}->{data};
 }
 
+sub fetch_tags {
+    my $self = shift;
+
+    my @tags;
+    for (sort {$self->{_mosaics}->{$a}->{count} <=> 
+               $self->{_mosaics}->{$b}->{count}} keys %{$self->{_mosaics}}) {
+        push @tags, $_;
+    }
+
+    return (wantarray) ? @tags : \@tags;
+}
+
+sub reorder_tags {
+    my $self = shift;
+    my %options = (
+        tags       => undef,
+        @_,
+    );
+
+    my $tags = $options{tags} or confess "%Error: 'tags' is a mandatory parameter!\n";
+
+    for my $tag (@$tags) {
+        confess "%Error: the tag '$tag' does not exist!" unless $self->_valid_tag($tag);
+    }
+
+    for my $i (0..$#{@$tags}) {
+        my $tag = $tags->[$i];
+        $self->{_mosaics}->{$tag}->{count} = $i;
+    }
+}
+
 
 sub close {
     my ($self) = @_;
@@ -366,30 +397,30 @@ File::Mosaic - assemble the constituent pieces of a file into a single file.
 
 =head1 SYNOPSIS
 
-use File::Mosaic;
+ use File::Mosaic;
 
-my $m = File::Mosaic->new(filename         => "/etc/dhcpd.conf", 
-                          mosaic_directory => "/etc/dhcpd.conf.mosaic");
+ my $m = File::Mosaic->new(filename         => "/etc/dhcpd.conf", 
+                           mosaic_directory => "/etc/dhcpd.conf.mosaic");
 
-$m->append(tag => 'begin', mosaic => "# dhcpd.conf\n");
+ $m->append(tag => 'begin', mosaic => "# dhcpd.conf\n");
 
-my $subnet;
-$subnet .= "subnet 192.168.1.1 netmask 255.255.255.0 {\n";
-$subnet .= "    option routers 192.168.1.1;\n";
-$subnet .= "    range 192.168.1.100 192.168.1.254;\n";
-$subnet .= "}\n\n";
+ my $subnet;
+ $subnet .= "subnet 192.168.1.1 netmask 255.255.255.0 {\n";
+ $subnet .= "    option routers 192.168.1.1;\n";
+ $subnet .= "    range 192.168.1.100 192.168.1.254;\n";
+ $subnet .= "}\n\n";
 
-$m->append(tag => 'subnet1', mosaic => $subnet);
-$m->append(tag => 'begin', mosaic => "# dhcpd.conf\n");
+ $m->append(tag => 'subnet1', mosaic => $subnet);
+ $m->append(tag => 'begin', mosaic => "# dhcpd.conf\n");
 
-my $host;
-$host .= "host test {\n";
-$host .= "    hardware ethernet ff:ff:ee:00:00:01;\n";
-$host .= "    fixed-address 192.168.1.25;\n";
-$host .= "}\n";
+ my $host;
+ $host .= "host test {\n";
+ $host .= "    hardware ethernet ff:ff:ee:00:00:01;\n";
+ $host .= "    fixed-address 192.168.1.25;\n";
+ $host .= "}\n";
 
-$m->insert_after(tag => 'host1', after_tag => 'subnet1', mosaic => $host);
-$m->close();
+ $m->insert_after(tag => 'host1', after_tag => 'subnet1', mosaic => $host);
+ $m->close();
 
 =head1 DESCRIPTION
 
@@ -438,6 +469,17 @@ Remove the tag from the file.
 =item fetch(tag)
 
 Return the mosaic located at the tag.
+
+=item fetch_tags()
+
+Return an array or array ref of all of the current tags.
+
+=item reorder_tags(tags)
+
+Use the tags array to reorder the position of the current tags.  The position
+in the array determines the position of the tags.  The tag at index 0 of tags
+it put at the beginning of the file.  Likewise the tag at index -1 of tags it
+put at the end of the file.
 
 =item close
 

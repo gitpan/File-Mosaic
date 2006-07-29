@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 6;
+use Test::More tests => 10;
 use File::Mosaic;
 use Digest::MD5;
 use IO::File;
@@ -22,11 +22,13 @@ my @tags = qw(1 2 3 4 5);
 cleanup($tmp_fn, $tmp_dn);
 
 write_test($tmp_fn, $tmp_dn, \@data, \@tags);
+fetch_tags_test($tmp_fn, $tmp_dn, \@data, \@tags);
 fetch_test($tmp_fn, $tmp_dn, \@data, \@tags);
 insert_before_test($tmp_fn, $tmp_dn, \@data, \@tags);
 insert_after_test($tmp_fn, $tmp_dn, \@data, \@tags);
 replace_test($tmp_fn, $tmp_dn, \@data, \@tags);
 remove_test($tmp_fn, $tmp_dn, \@data, \@tags);
+reorder_tags_test($tmp_fn, $tmp_dn, \@data, \@tags);
 
 cleanup($tmp_fn, $tmp_dn);
 
@@ -39,6 +41,15 @@ sub write_test {
     my $sum_test = digest_file($fn);
 
     is($sum, $sum_test);
+}
+
+sub fetch_tags_test {
+    my ($fn, $dn, $aref, $tag_aref) = @_;
+
+    my $fm = File::Mosaic->new(filename => $fn, mosaic_directory => $dn);
+    my @tags = $fm->fetch_tags();
+
+    is_deeply($tag_aref, \@tags);
 }
 
 sub fetch_test {
@@ -132,6 +143,35 @@ sub remove_test {
     $fm->close();
 
     my $sum = digest_array($aref);
+    my $sum_test = digest_file($fn);
+
+    is($sum, $sum_test);
+}
+
+sub reorder_tags_test {
+    my ($fn, $dn, $aref, $tag_aref) = @_;
+
+    my $fm = File::Mosaic->new(filename => $fn, mosaic_directory => $dn);
+
+    my @tags = $fm->fetch_tags();
+    my @data;
+    push @data, $fm->fetch(tag => $_) for (@tags);
+    my @rdata = reverse @data; 
+ 
+    my @rtags = reverse @tags;
+    $fm->reorder_tags(tags => \@rtags);
+    my @rtags_test = $fm->fetch_tags();
+
+    is_deeply(\@rtags, \@rtags_test);
+
+    my @rdata_test;
+    push @rdata_test, $fm->fetch(tag => $_) for (@rtags);
+
+    is_deeply(\@rdata, \@rdata_test);
+
+    $fm->close();
+
+    my $sum = digest_array(\@rdata_test);
     my $sum_test = digest_file($fn);
 
     is($sum, $sum_test);
