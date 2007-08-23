@@ -27,11 +27,12 @@ PLATFORMS
 
   FreeBSD v6.1
   RedHat Enterprise Linux 4u2
+  Ubuntu Feisty
 
 AUTHOR
  
  Christopher Boumenot <boumenot@gmail.com>
 
- Copyright (C) 2006 Christopher Boumenot.  All Rights Reserved.  This program
- is free software; you can redistribute it and/or modify it under the same 
- terms as Perl itself.
+ Copyright (C) 2006-2007 Christopher Boumenot.  All Rights Reserved.  This
+ program is free software; you can redistribute it and/or modify it under the
+ same terms as Perl itself.

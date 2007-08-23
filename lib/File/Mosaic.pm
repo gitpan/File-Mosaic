@@ -1,7 +1,7 @@
 # $Id: Mosaic.pm 2466 2006-06-14 22:30:52Z cboumeno $
 ######################################################################
 #
-# This program is Copyright 2006 by Christopher Boumenot 
+# This program is Copyright 2006-2007 by Christopher Boumenot 
 # <boumenot@gmail.com>.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@ require 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use IO::File;
 use File::Spec;
@@ -228,7 +228,7 @@ sub reorder_tags {
         confess "%Error: the tag '$tag' does not exist!" unless $self->_valid_tag($tag);
     }
 
-    for my $i (0..$#{@$tags}) {
+    for my $i (0..scalar(@$tags)-1) {
         my $tag = $tags->[$i];
         $self->{_mosaics}->{$tag}->{count} = $i;
     }
